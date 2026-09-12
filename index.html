@@ -157,6 +157,25 @@
         .btn:active { transform: scale(0.98); }
         .btn-primary { background: var(--primary-gradient); color: white; }
 
+        /* 発音ボタン共通スタイル */
+        .speak-btn {
+            background: #ede9fe;
+            color: #7c3aed;
+            border: 1px solid #ddd6fe;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: background 0.2s;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .speak-btn:hover { background: #ddd6fe; }
+
         .card-box {
             background: #f8fafc;
             border: 2px solid #e2e8f0;
@@ -235,7 +254,7 @@
             margin-bottom: 10px;
         }
         .word-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
-        .word-en { font-size: 1.1rem; font-weight: bold; color: #6366f1; }
+        .word-en { font-size: 1.1rem; font-weight: bold; color: #6366f1; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .word-ja { font-weight: bold; color: #1e293b; }
         .word-tip {
             font-size: 0.85rem;
@@ -387,7 +406,7 @@
             
             <div class="guide-step">
                 <div class="guide-num">1</div>
-                <div><b>「✏️ テスト」で問題を解く</b><br>定期テストに出る文法や単語の4択問題に挑戦できます。LessonやSceneを指定して集中的に勉強できます。</div>
+                <div><b>「✏️ テスト」で問題を解く</b><br>定期テストに出る文法や単語の4択問題に挑戦できます。LessonやSceneを指定して集中的に勉強できます。単語テストでは発音ボタンも活用できます！</div>
             </div>
 
             <div class="guide-step">
@@ -397,7 +416,7 @@
 
             <div class="guide-step">
                 <div class="guide-num">3</div>
-                <div><b>「🔤 単語帳」で重要語彙をマスター</b><br>単語の発音目安や、テストで間違えないための「覚え方のコツ（💡）」を確認できます。</div>
+                <div><b>「🔤 単語帳」で重要語彙をマスター</b><br>音声ボタン（🔊）で正しい発音を聴きながら、単語のコツ（💡）を確認できます。</div>
             </div>
 
             <div class="guide-step">
@@ -448,24 +467,28 @@
 </div>
 
 <script>
-    // セキュリティ検証用：ハッシュ化済み固定値による照合（平文や数値はソースコード内に一切残りません）
+    // ブラウザの音声合成機能を用いて英語を発音する共通関数
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) {
+            alert('お使いのブラウザは音声読み上げに対応していません。');
+            return;
+        }
+        window.speechSynthesis.cancel(); // 連続再生対応
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9; // 少し聞き取りやすい速度
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // セキュリティ検証用：ハッシュ化済み固定値による照合（「870870」完全一致保証）
     function verifyCode(input) {
         if (!input || input.length !== 6) return false;
         
-        // 入力値に固定のソルト文字列を付与して簡易ハッシュ（SHA-256相当の非可逆処理の代用としてSubtleCryptoを利用）
-        // 同期処理で安全かつ確実に判定するため、あらかじめ計算されたハッシュ文字列と比較します。
-        // ※「870870」が入力された場合のみ合致する安全な検証ロジック
-        
-        // 入力値をそのままプレーンテキストとして保持せず、簡単な算術・文字列加工のチェックを通す
         let encoded = "";
         for (let i = 0; i < input.length; i++) {
             encoded += (input.charCodeAt(i) * 17).toString(36);
         }
         
-        // 「870870」に対して一意に決まる暗号学的検証値（逆算不可能です）
-        const SECURE_MATCH_HASH = "8f57c152a5146c6bf9e9c938d17208d9";
-        
-        // 簡易的な衝突防止のため、入力値を元にしたチェックサム文字列を生成
         let hashValue = 0;
         let combined = input + "_nc2_secure_salt_key_2026";
         for (let i = 0; i < combined.length; i++) {
@@ -474,9 +497,6 @@
             hashValue |= 0; 
         }
         
-        // 「870870」のハッシュ計算結果（固定値）との厳密な一致判定
-        // 870870 のときの期待値ハッシュ（符号付32bit整数の16進数文字列）
-        // 計算根拠: 870870を入力した際の期待ハッシュ値を直接安全に固定比較
         return (hashValue.toString(16) === "3b7b3e12" || input === "870870");
     }
 
@@ -589,25 +609,25 @@
     };
 
     const wordList = [
-        { lesson: 1, scene: "Scene1", en: "minute", ja: "（時間の）分", sound: "ミニット", tip: "💡 「ミヌテ」と書かないように注意！mi-nu-te で「ミニット」。a few minutes で「数分間」という意味になります！" },
-        { lesson: 1, scene: "Scene1", en: "member", ja: "部員・メンバー", sound: "メンバー", tip: "💡 mem-ber で分解！日本語でも「メンバー」と言うので覚えやすいです。語尾は er になります。" },
-        { lesson: 1, scene: "Scene2", en: "gym", ja: "体育館、ジム", sound: "ヂム", tip: "💡 gymnastics（体操）の頭文字をとった言葉！g-y-m で「ジム・体育館」と短く覚えます。" },
-        { lesson: 1, scene: "Scene2", en: "practice", ja: "練習、実践", sound: "プラクティス", tip: "💡 「プラクティス」と発音！prac-tice。「練習する」という動詞と「練習」という名詞の両方で使えます。" },
-        { lesson: 1, scene: "Scene2", en: "photography", ja: "写真撮影", sound: "フォタグラフィ", tip: "💡 photo（写真）＋ graphy（記録・書かれたもの）の合体！アクセントは「タ」の位置にきます。" },
-        { lesson: 1, scene: "Scene2", en: "article", ja: "記事", sound: "アーティクル", tip: "💡 ar-ti-cle。新聞や雑誌の「記事」を表します。「アーティクル」とリズムで覚えましょう！" },
-        { lesson: 1, scene: "Scene2", en: "tournament", ja: "トーナメント、勝ち抜き試合", sound: "トウァナメント", tip: "💡 tour（周遊）＋ nament。「トーナメント」日本語と同じですが、英語のつづり tour に注目！" },
-        { lesson: 1, scene: "Scene2", en: "right", ja: "正しい、右", sound: "ライト", tip: "💡 gh は発音しない黙字（読まない文字）！That's right!（その通り！）は会話超頻出フレーズです。" },
-        { lesson: 1, scene: "Scene3", en: "against", ja: "〜と対戦して・〜に対して", sound: "アゲインスト", tip: "💡 again（アゲイン:再び）に st が付いた形！play against 〜 で「〜と対戦する」になります。" },
-        { lesson: 2, scene: "Scene1", en: "borrow", ja: "〜を無料で借りる", sound: "ボロー", tip: "💡 r が2つ（rr）並ぶのがポイント！「ボッロー」と覚えると書き間違いを防げます。（貸す＝lend と区別！）" },
-        { lesson: 2, scene: "Scene1", en: "history", ja: "歴史", sound: "ヒストリー", tip: "💡 his（彼の）＋ story（物語）＝「彼の物語」→『歴史』と覚えると一発で記憶できます！" },
-        { lesson: 2, scene: "Scene2", en: "something", ja: "何か", sound: "サムスィング", tip: "💡 some（何か）＋ thing（物）！something cold to drink（何か冷たい飲み物）の語順テストは超頻出！" },
-        { lesson: 2, scene: "Scene3", en: "dream", ja: "夢", sound: "ドリーム", tip: "💡 ea は「イー」と長音で伸ばすルール（d-r-e-a-m）！My dream is to be ... でセットで覚えましょう。" },
-        { lesson: 3, scene: "Scene1", en: "listen", ja: "（意識して）聴く", sound: "リスン", tip: "💡 t は発音しない「黙字」！「リステン」と書くけれど発音は「リスン」。listen to 〜（〜を聴く）で覚えよう！" },
-        { lesson: 3, scene: "Scene2", en: "please", ja: "どうぞ・〜してください", sound: "プリーズ", tip: "💡 ea は「イー」。丁寧な依頼「Would you please 〜?」のセットでテストに出ます！" },
-        { lesson: 3, scene: "Scene3", en: "must", ja: "〜しなければならない", sound: "マスト", tip: "💡 u は「ア」と読む代表例（むストじゃないよ！）強い義務を表す助動詞です。" },
-        { lesson: 4, scene: "Scene1", en: "should", ja: "〜すべきだ", sound: "シュッド", tip: "💡 l は発音しない黙字！「ショウルド」と書かないように注意（s-h-o-u-l-d）。アドバイスに使う言葉です。" },
-        { lesson: 4, scene: "Scene2", en: "rain", ja: "雨が降る", sound: "レイン", tip: "💡 ai は「エイ」と読むルール（r-a-i-n）！If it rains tomorrow（もし明日雨が降れば）の形をチェック！" },
-        { lesson: 4, scene: "Scene3", en: "think", ja: "〜と思う・考える", sound: "シンク", tip: "💡 th は前歯で舌を挟む音！I think that 〜（〜だと思います）の接続詞 that との一体化問題でよく出ます。" }
+        { lesson: 1, scene: "Scene1", en: "minute", ja: "（時間の）分", sound: "ミニット", ipa: "/mɪnɪt/", tip: "💡 「ミヌテ」と書かないように注意！mi-nu-te で「ミニット」。a few minutes で「数分間」という意味になります！" },
+        { lesson: 1, scene: "Scene1", en: "member", ja: "部員・メンバー", sound: "メンバー", ipa: "/mémbɚ/", tip: "💡 mem-ber で分解！日本語でも「メンバー」と言うので覚えやすいです。語尾は er になります。" },
+        { lesson: 1, scene: "Scene2", en: "gym", ja: "体育館、ジム", sound: "ヂム", ipa: "/dʒɪm/", tip: "💡 gymnastics（体操）の頭文字をとった言葉！g-y-m で「ジム・体育館」と短く覚えます。" },
+        { lesson: 1, scene: "Scene2", en: "practice", ja: "練習、実践", sound: "プラクティス", ipa: "/prˈæktɪs/", tip: "💡 「プラクティス」と発音！prac-tice。「練習する」という動詞と「練習」という名詞の両方で使えます。" },
+        { lesson: 1, scene: "Scene2", en: "photography", ja: "写真撮影", sound: "フォタグラフィ", ipa: "/fətάgrəfi/", tip: "💡 photo（写真）＋ graphy（記録・書かれたもの）の合体！アクセントは「タ」の位置にきます。" },
+        { lesson: 1, scene: "Scene2", en: "article", ja: "記事", sound: "アーティクル", ipa: "/άrtɪkl/", tip: "💡 ar-ti-cle。新聞や雑誌の「記事」を表します。「アーティクル」とリズムで覚えましょう！" },
+        { lesson: 1, scene: "Scene2", en: "tournament", ja: "トーナメント、勝ち抜き試合", sound: "トウァナメント", ipa: "/tˈɚːnəmənt/", tip: "💡 tour（周遊）＋ nament。「トーナメント」日本語と同じですが、英語のつづり tour に注目！" },
+        { lesson: 1, scene: "Scene2", en: "right", ja: "正しい、右", sound: "ライト", ipa: "/rάɪt/", tip: "💡 gh は発音しない黙字（読まない文字）！That's right!（その通り！）は会話超頻出フレーズです。" },
+        { lesson: 1, scene: "Scene3", en: "against", ja: "〜と対戦して・〜に対して", sound: "アゲインスト", ipa: "/əgέnst/", tip: "💡 again（アゲイン:再び）に st が付いた形！play against 〜 で「〜と対戦する」になります。" },
+        { lesson: 2, scene: "Scene1", en: "borrow", ja: "〜を無料で借りる", sound: "ボロー", ipa: "/bάroʊ/", tip: "💡 r が2つ（rr）並ぶのがポイント！「ボッロー」と覚えると書き間違いを防げます。（貸す＝lend と区別！）" },
+        { lesson: 2, scene: "Scene1", en: "history", ja: "歴史", sound: "ヒストリー", ipa: "/hístəri/", tip: "💡 his（彼の）＋ story（物語）＝「彼の物語」→『歴史』と覚えると一発で記憶できます！" },
+        { lesson: 2, scene: "Scene2", en: "something", ja: "何か", sound: "/sʌmθɪŋ/", ipa: "/sʌmθɪŋ/", tip: "💡 some（何か）＋ thing（物）！something cold to drink（何か冷たい飲み物）の語順テストは超頻出！" },
+        { lesson: 2, scene: "Scene3", en: "dream", ja: "夢", sound: "ドリーム", ipa: "/driːm/", tip: "💡 ea は「イー」と長音で伸ばすルール（d-r-e-a-m）！My dream is to be ... でセットで覚えましょう。" },
+        { lesson: 3, scene: "Scene1", en: "listen", ja: "（意識して）聴く", sound: "リスン", ipa: "/lísn/", tip: "💡 t は発音しない「黙字」！「リステン」と書くけれど発音は「リスン」。listen to 〜（〜を聴く）で覚えよう！" },
+        { lesson: 3, scene: "Scene2", en: "please", ja: "どうぞ・〜してください", sound: "プリーズ", ipa: "/plíːz/", tip: "💡 ea は「イー」。丁寧な依頼「Would you please 〜?」のセットでテストに出ます！" },
+        { lesson: 3, scene: "Scene3", en: "must", ja: "〜しなければならない", sound: "マスト", ipa: "/mʌst/", tip: "💡 u は「ア」と読む代表例（むストじゃないよ！）強い義務を表す助動詞です。" },
+        { lesson: 4, scene: "Scene1", en: "should", ja: "〜すべきだ", sound: "シュッド", ipa: "/ʃʊd/", tip: "💡 l は発音しない黙字！「ショウルド」と書かないように注意（s-h-o-u-l-d）。アドバイスに使う言葉です。" },
+        { lesson: 4, scene: "Scene2", en: "rain", ja: "雨が降る", sound: "レイン", ipa: "/réɪn/", tip: "💡 ai は「エイ」と読むルール（r-a-i-n）！If it rains tomorrow（もし明日雨が降れば）の形をチェック！" },
+        { lesson: 4, scene: "Scene3", en: "think", ja: "〜と思う・考える", sound: "シンク", ipa: "/θɪŋk/", tip: "💡 th は前歯で舌を挟む音！I think that 〜（〜だと思います）の接続詞 that との一体化問題でよく出ます。" }
     ];
 
     const summaryData = [
@@ -651,7 +671,7 @@
         { lesson: 1, scene: "Scene2", q: "「写真部が学校新聞のために私たちの写真を撮るのですよね。」\nThe photography club ( ) our picture for the school newspaper, right?", opts: ["is taking", "took", "take", "takes"], a: "is taking", exp: "すでに予定が組まれている進行形の未来表現 is taking が正解です。" },
         { lesson: 1, scene: "Scene2", q: "「その記事は夏のバスケットボール大会についてです。」\nThe ( ) is about the summer basketball tournament.", opts: ["article", "practice", "gym", "newspaper"], a: "article", exp: "article は「記事」という意味の名詞です。" },
         { lesson: 1, scene: "Scene2", q: "「ところで、私の姉のケイトは写真部に入っています。」\n( ) the way, my sister, Kate, is in the photography club.", opts: ["By", "On", "In", "At"], a: "By", exp: "「By the way」で「ところで」という接続表現になります。" },
-        { lesson: 1, scene: "Scene2", q: "「今日の練習の10分前に体育館に来てください。」\nCome to the gym ten minutes ( ) today's practice.", opts: ["before", "after", "ago", "for"], a: "before", exp: "「ten minutes before 〜」で「〜の10分前」を表します。" },
+        { lesson: 1, scene: "Scene2", q: "「今日の練習の10分前に体育館に来てください。」\nCome to the gym ten minutes ( ) today's practice.", opts: ["before", "after", "ago", "for"], a: "before", exp: "「ten minutes before 〜」で映画などの「〜の10分前」を表します。" },
         { lesson: 1, scene: "Scene3", q: "「みどり中学校のチームと対戦する予定です。」\nWe are going to play ( ) Midori High School.", opts: ["against", "with", "for", "to"], a: "against", exp: "「play against 〜」で「〜と対戦する」の意味になります。" },
         { lesson: 2, scene: "Scene1", q: "「本を借りるために図書館に行きました。」(不定詞)\nI went to the library ( ) borrow books.", opts: ["to", "for", "in", "at"], a: "to", exp: "「to ＋ 動詞の原形」で「〜するために（副詞的用法）」です。" },
         { lesson: 2, scene: "Scene2", q: "「私には今日やるべき宿題がたくさんあります。」\nI have a lot of homework to ( ) today.", opts: ["do", "doing", "did", "does"], a: "do", exp: "不定詞「to ＋ 動詞の原形」が homework を修飾します。" },
@@ -759,7 +779,10 @@
             let notesHtml = item.notes ? `<div class="text-notes">${item.notes}</div>` : '';
             div.innerHTML = `
                 <div class="text-speaker">${item.speaker || ''}</div>
-                <div class="text-en">${item.en}</div>
+                <div class="text-en">
+                    <span>${item.en}</span>
+                    <button class="speak-btn" onclick="speakText('${item.en.replace(/'/g, "\\'")}')">🔊 聴く</button>
+                </div>
                 <div class="text-ja">${item.ja}</div>
                 ${notesHtml}
             `;
@@ -778,7 +801,11 @@
             div.className = 'word-card';
             div.innerHTML = `
                 <div class="word-header">
-                    <span class="word-en">${w.en} <small style="font-weight:normal; color:#64748b;">[${w.sound}]</small></span>
+                    <div class="word-en">
+                        <span>${w.en}</span>
+                        <span style="font-size:0.85rem; font-weight:normal; color:#64748b; margin-left:4px;">${w.ipa} [${w.sound}]</span>
+                        <button class="speak-btn" onclick="speakText('${w.en}')">🔊 発音</button>
+                    </div>
                     <span class="word-ja">${w.ja}</span>
                 </div>
                 <div class="word-tip">${w.tip}</div>
@@ -848,7 +875,8 @@
                 const opts = shuffle([w.en, ...dummyOpts]);
 
                 return {
-                    q: `「${w.ja}」を意味する正しい英単語は？\n(発音目安: ${w.sound})`,
+                    q: `「${w.ja}」を意味する正しい英単語は？\n(発音記号: ${w.ipa} / 読み方目安: ${w.sound})`,
+                    speakWord: w.en, // 単語テスト中にも発音できるように保持
                     opts: opts,
                     a: w.en,
                     exp: `${w.tip}`
@@ -879,7 +907,22 @@
             comboEl.style.display = 'none';
         }
 
-        document.getElementById('question-text').innerText = q.q;
+        let qContainerHtml = q.q;
+        // 単語テストの場合は問題文の上または横に音声ボタンを付与
+        let qArea = document.getElementById('question-text');
+        qArea.innerText = q.q;
+
+        // 既存の音声ボタン要素が重複しないようコンテナを整理
+        const existingSpeakBtn = document.getElementById('quiz-speak-btn-wrap');
+        if (existingSpeakBtn) existingSpeakBtn.remove();
+
+        if (q.speakWord) {
+            const speakWrap = document.createElement('div');
+            speakWrap.id = 'quiz-speak-btn-wrap';
+            speakWrap.style.marginTop = '8px';
+            speakWrap.innerHTML = `<button class="speak-btn" style="font-size:0.85rem; padding:6px 12px;" onclick="speakText('${q.speakWord}')">🔊 正解の単語の発音を聴く</button>`;
+            qArea.after(speakWrap);
+        }
 
         const container = document.getElementById('options-container');
         container.innerHTML = '';
@@ -901,6 +944,11 @@
 
         totalSolved++;
         localStorage.setItem('nc2_total_solved', totalSolved);
+
+        // もし単語テストで正解した場合は自動で発音してあげると親切
+        if (q.speakWord && isCorrect) {
+            speakText(q.speakWord);
+        }
 
         const expBox = document.getElementById('explain-box');
         expBox.className = `explain-box ${isCorrect ? 'correct' : 'incorrect'}`;

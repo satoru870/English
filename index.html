@@ -30,6 +30,8 @@
     button { cursor: pointer; }
     .page { width: min(1120px, 100%); margin: 0 auto; padding: 28px 28px 64px; }
     .topline { display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); padding-bottom:14px; }
+    .top-actions { display:flex; align-items:center; gap:12px; }
+    .print-trigger { min-height:34px; padding:6px 10px; font-size:.72rem; white-space:nowrap; }
     .brand { display:flex; align-items:center; gap:10px; font-size:.78rem; font-weight:900; letter-spacing:0; }
     .brand-mark { width:28px; height:28px; display:grid; place-items:center; background:var(--lime); border-radius:7px; color:var(--green-dark); font-family:var(--mono); }
     .top-meta { color:var(--muted); font: .7rem var(--mono); }
@@ -138,13 +140,56 @@
       .section-note { margin-top:5px; }
       footer { flex-direction:column; }
     }
+    #print-worksheet { display:none; }
+    .print-sheet-title { margin:0 0 6px; font-size:20pt; }
+    .print-sheet-subtitle { margin:0 0 20px; color:#444; font-size:10pt; }
+    .print-question { break-inside:avoid; margin:0 0 18px; }
+    .print-question h3 { margin:0 0 5px; font-size:11pt; }
+    .print-question p { margin:4px 0; white-space:pre-line; }
+    .print-options { margin:6px 0 0; padding-left:26px; list-style-type:upper-alpha; }
+    .print-options li { margin:3px 0; }
+    .print-answer-key { break-before:page; }
+    .print-answer-key h2 { margin-bottom:14px; }
+    .print-answer { break-inside:avoid; margin:0 0 12px; }
+    .print-answer strong { display:block; }
+    @media print {
+      body.printing-page { background:#fff; color:#111; }
+      body.printing-page .page { width:auto; margin:0; padding:0; }
+      body.printing-page .page > :not(main),
+      body.printing-page main > .panel:not(.active) { display:none !important; }
+      body.printing-page main { padding:0; }
+      body.printing-page .panel.active { display:block !important; animation:none !important; }
+      body.printing-page #quiz-panel { display:none !important; }
+      body.printing-page .filters,
+      body.printing-page .example-display-controls,
+      body.printing-page .reference-links,
+      body.printing-page .listen,
+      body.printing-page .star,
+      body.printing-page .button { display:none !important; }
+      body.printing-page .section-head { margin:0 0 14px; }
+      body.printing-page .section-note { display:none; }
+      body.printing-page .list { display:block; }
+      body.printing-page .item { break-inside:avoid; border:0; border-bottom:1px solid #ccc; border-radius:0; background:#fff; padding:8px 0; margin:0 !important; }
+      body.printing-page .example-group { margin:0 0 16px; }
+      body.printing-page .example-group-title { break-after:avoid; color:#111; }
+      body.printing-page .example-group-count { color:#555; }
+      body.printing-page .prompt { margin:0 0 4px !important; color:#111; font-size:11pt; }
+      body.printing-page .japanese { color:#222; text-align:left; }
+      body.printing-page .item-note,
+      body.printing-page .rule { color:#333; }
+      body.printing-page [hidden] { display:none !important; }
+      body.printing-worksheet { background:#fff; color:#111; }
+      body.printing-worksheet .page { display:none !important; }
+      body.printing-worksheet #print-worksheet { display:block !important; }
+    }
+    @page { size:A4; margin:14mm; }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="topline">
       <div class="brand"><span class="brand-mark">NC</span> ENGLISH STUDY ROOM</div>
-      <div class="top-meta">NEW CROWN 2 / LESSON 05—06</div>
+      <div class="top-actions"><div class="top-meta">NEW CROWN 2 / LESSON 05—06</div><button type="button" class="button print-trigger" id="print-current">印刷 / PDF</button></div>
     </div>
     <header class="hero">
       <div>
@@ -198,7 +243,7 @@
         <div class="list" id="phrase-list"></div>
       </section>
       <section id="examples-panel" class="panel">
-        <div class="section-head"><h2>例文トレーニング</h2><div class="section-note">英文・和訳・解説を切り替えて学習できます</div></div>
+        <div class="section-head"><div><h2>例文トレーニング</h2><div class="section-note">英文・和訳・解説を切り替えて学習できます</div></div></div>
         <div class="filters" style="grid-template-columns:1fr 1fr"><div><label for="example-lesson">Lesson</label><select id="example-lesson"><option value="all">Lesson 5・6</option><option value="5">Lesson 5</option><option value="6">Lesson 6</option></select></div><div><label for="example-scene-filter">Part / Scene</label><select id="example-scene-filter"><option value="all">すべてのPart / Scene</option></select></div></div>
         <div class="reference-links">
           <a href="https://wayakunote.com/2025/08/25/%e3%83%8b%e3%83%a5%e3%83%bc%e3%82%af%e3%83%a9%e3%82%a6%e3%83%b3-%e4%b8%ad%e5%ad%a62%e5%b9%b4-lesson5-visiting-australia%e3%80%80%e5%92%8c%e8%a8%b3%e3%83%bb%e8%a7%a3%e8%aa%ac/" target="_blank" rel="noopener noreferrer">Lesson 5 本文・解説 ↗</a>
@@ -229,6 +274,7 @@
     </main>
     <footer><span>NEW CROWN 2 · Lesson 5 / Lesson 6</span><span>学習用オリジナル問題</span></footer>
   </div>
+  <section id="print-worksheet" aria-hidden="true"></section>
   <script>
     const examples = [
       [5,'Part 1 · Scene 1','Where did you stay during your trip?','旅行中、どこに滞在しましたか。','過去の出来事をたずねる疑問文。'],
@@ -492,6 +538,53 @@
       $('example-show-note').checked = preset === 'all' || preset === 'note';
       updateExampleVisibility();
     }
+    function appendTextElement(parent, tagName, className, text) {
+      const element = document.createElement(tagName);
+      if (className) element.className = className;
+      element.textContent = text;
+      parent.append(element);
+      return element;
+    }
+    function buildPrintableQuiz() {
+      const pool = makeQuizPool();
+      if (!pool.length) { alert('この条件で印刷できる問題がありません。'); return false; }
+      const sheet = $('print-worksheet'); sheet.replaceChildren();
+      const title = appendTextElement(sheet, 'h1', 'print-sheet-title', 'NEW CROWN 2 · テスト');
+      const type = $('quiz-type').selectedOptions[0].textContent;
+      const lesson = $('lesson-filter').selectedOptions[0].textContent;
+      const scene = $('scene-filter').value === 'all' ? '全Scene' : $('scene-filter').selectedOptions[0].textContent;
+      appendTextElement(sheet, 'p', 'print-sheet-subtitle', `${type} / ${lesson} / ${scene} / ${pool.length}問`);
+      const questionSection = document.createElement('section');
+      pool.forEach((item, index) => {
+        const card = document.createElement('article'); card.className = 'print-question';
+        appendTextElement(card, 'h3', '', `${index + 1}. ${lessonName(item.lesson)}${item.scene ? ` · ${item.scene}` : ''}`);
+        appendTextElement(card, 'p', '', item.q);
+        const options = document.createElement('ol'); options.className = 'print-options';
+        item.opts.forEach(option => appendTextElement(options, 'li', '', option));
+        card.append(options); questionSection.append(card);
+      });
+      sheet.append(questionSection);
+      const answerSection = document.createElement('section'); answerSection.className = 'print-answer-key';
+      appendTextElement(answerSection, 'h2', '', '解答・解説');
+      pool.forEach((item, index) => {
+        const answer = document.createElement('div'); answer.className = 'print-answer';
+        appendTextElement(answer, 'strong', '', `${index + 1}. ${item.a}`);
+        appendTextElement(answer, 'div', '', item.exp.replace(/<[^>]*>/g, ' '));
+        answerSection.append(answer);
+      });
+      sheet.append(answerSection);
+      return true;
+    }
+    function printCurrentView() {
+      const activeTab = document.querySelector('.tab.active')?.dataset.panel;
+      const worksheet = activeTab === 'quiz';
+      if (worksheet && !buildPrintableQuiz()) return;
+      document.body.classList.add(worksheet ? 'printing-worksheet' : 'printing-page');
+      window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-worksheet', 'printing-page');
+      }, {once:true});
+      window.print();
+    }
     function updateExampleScenes() {
       const lesson = $('example-lesson').value;
       const select = $('example-scene-filter');
@@ -609,6 +702,7 @@
     $('phrase-lesson').addEventListener('change', renderPhrases);
     $('example-lesson').addEventListener('change', updateExampleScenes);
     $('example-scene-filter').addEventListener('change', renderExamples);
+    $('print-current').addEventListener('click', printCurrentView);
     ['example-show-en','example-show-ja','example-show-note'].forEach(id => $(id).addEventListener('change', updateExampleVisibility));
     document.querySelectorAll('[data-example-preset]').forEach(button => button.addEventListener('click', () => setExamplePreset(button.dataset.examplePreset)));
     $('clear-review').addEventListener('click', () => { saved = []; localStorage.removeItem(storageKey); renderAll(); });
